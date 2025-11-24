@@ -1,4 +1,5 @@
 #include <OctoWS2811.h>
+#define s1 SerialUSB1
 
 const int numPins = 8;
 byte pinList[numPins] = {2, 14, 7, 8, 6, 20, 21, 5};
@@ -13,16 +14,12 @@ const int config = WS2811_GRB | WS2811_800kHz;
 
 OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, config, numPins, pinList);
 
-#define S1 Serial1 // RX: 0 TX: 1
-#define S2 Serial4 // RX: 16 TX: 17
-
-void setup() {
+void setup() { // Change B1 -> any name for network board as desired
+  Serial.println("B1: This may be sent before your PC is able to receive");
   leds.begin();
   leds.show();
-  Serial.begin(38400);
-  S1.begin(38400);
-  S2.begin(38400);
-
+  while (!Serial) {}
+  Serial.println("B1: Serial Ready");
 }
 
 #define RED    0x160000
@@ -33,9 +30,35 @@ void setup() {
 #define ORANGE 0x100400
 #define WHITE  0x101010
 
+char incomingByte = 1;
 void loop() {
-
-
+  receive();
+  if (incomingByte == 36) {Off();}
+  else if (incomingByte == 65) {Animation1();}
+  else if (incomingByte == 66) {Animation2();}
+  else if (incomingByte == 67) {Animation3();}
+  else if (incomingByte == 37) {run();}
+  clear();
+  delay(100);
 }
 
-void write()
+void receive() {
+  if (s1.available()) {
+    incomingByte = s1.read();
+  }
+}
+void clear() {incomingByte = 1;}
+
+void run() {
+  while (incomingByte == 37) {
+    // display frame
+    
+    // load next frame
+
+    // increment frame counter
+
+    receive();
+    if (incomingByte == 36) {incomingByte = 37;}
+  }
+
+}
