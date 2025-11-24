@@ -48,7 +48,7 @@ void loop() {
     run();
     clear();
   }
-  delay(100);
+  delay(500); // monitor delay 
 }
 
 void clear() {incomingByte = -1;} // reset byte char
@@ -60,9 +60,9 @@ void PrintCommands() { // print to console list of all possible commands
   Serial.println("'A' to select animation 1: Candycane");
   Serial.println("'B' to select animation 2: Shooting Stars");
   Serial.println("'C' to select animatino 3: Twinkling Lights");
-  Serial.println("");
-  Serial.println("");
-  Serial.println("");
+  Serial.println("'1', '2', '3', '4', or '5' to set the global brightness level");
+  Serial.println("'n' to quickly turn off all LEDs. Can be used while animations are playing");
+  Serial.println("' ' to start running animation; ' ' again to stop animation");
 }
 
 void SelectAnimation(int Animation) { // Parameter options are 1, 2, or 3
