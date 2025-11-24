@@ -51,7 +51,7 @@ void loop() {
   delay(500); // monitor delay 
 }
 
-void clear() {incomingByte = -1;} // reset byte char
+void clear() {incomingByte = 1;} // reset byte char
 
 void PrintCommands() { // print to console list of all possible commands
   for (int i = 0; i < 5; i++) {
