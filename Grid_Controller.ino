@@ -1,64 +1,96 @@
 #include <OctoWS2811.h>
-#define s1 SerialUSB1
+
+#define CTRL SerialUSB1   // control channel from PC
+// #define CTRL Serial     // <- use this instead if USB Type = "Serial"
+
+#define BOARD_ID 1   // change per grid Teensy
 
 const int numPins = 8;
 byte pinList[numPins] = {2, 14, 7, 8, 6, 20, 21, 5};
-
 const int ledsPerStrip = 120;
+const int bytesPerLED = 3;
 
-const int bytesPerLED = 3;  // change to 4 if using RGBW
 DMAMEM int displayMemory[ledsPerStrip * numPins * bytesPerLED / 4];
 int drawingMemory[ledsPerStrip * numPins * bytesPerLED / 4];
 
 const int config = WS2811_GRB | WS2811_800kHz;
-
 OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, config, numPins, pinList);
 
-void setup() { // Change B1 -> any name for network board as desired
-  Serial.println("B1: This may be sent before your PC is able to receive");
+void announce(Stream& port, const char* which) {
+  port.print("GRID BOARD=");
+  port.print(BOARD_ID);
+  port.print(" PORT=");
+  port.println(which); // DBG or CTRL
+}
+
+static bool playing = false;  // run mode
+
+void setup() {
   leds.begin();
   leds.show();
-  while (!Serial) {}
-  Serial.println("B1: Serial Ready");
+
+  Serial.begin(115200);   // debug port (optional)
+  CTRL.begin(0);          // USB CDC ignores baud, but begin() is good practice
+
+  announce(Serial, "DBG");
+  announce(CTRL, "CTRL");
 }
 
-#define RED    0x160000
-#define GREEN  0x001600
-#define BLUE   0x000016
-#define YELLOW 0x101400
-#define PINK   0x120009
-#define ORANGE 0x100400
-#define WHITE  0x101010
+volatile uint16_t stepCount = 0;
 
-char incomingByte = 1;
+void readCommands() {
+  for (;;) {
+    int b = pollHandshake(CTRL, "CTRL");
+    if (b < 0) break;
+
+    switch (b) {
+      case '>': if (stepCount < 65535) stepCount++; break;
+      case 'A': playing = false; Animation1(); break; 
+      case 'B': playing = false; Animation2(); break;
+      case 'C': playing = false; Animation3(); break; 
+      case '%': playing = true;  break;
+      case '$': playing = false; Off(); break; 
+    }
+  }
+}
+
+int pollHandshake(Stream& port, const char* which) {
+  if (!port.available()) return -1;
+
+  int b = port.read();
+  if (b == '?') {
+    announce(port, which);
+    return -1;            // handshake byte consumed
+  }
+  return b;               // real data byte
+}
+
 void loop() {
-  receive();
-  if (incomingByte == 36) {Off();}
-  else if (incomingByte == 65) {Animation1();}
-  else if (incomingByte == 66) {Animation2();}
-  else if (incomingByte == 67) {Animation3();}
-  else if (incomingByte == 37) {run();}
-  clear();
-  delay(100);
+  pollHandshake(Serial, "DBG");  // debug-only handshake
+  readCommands();
+
+  if (stepCount > 0) {
+  stepCount--;
+  stepFrame(); 
+  } else if (playing) stepFrame();
 }
 
-void receive() {
-  if (s1.available()) {
-    incomingByte = s1.read();
-  }
+void Animation1() {
+
 }
-void clear() {incomingByte = 1;}
 
-void run() {
-  while (incomingByte == 37) {
-    // display frame
-    
-    // load next frame
+void Animation2() {
 
-    // increment frame counter
+}
 
-    receive();
-    if (incomingByte == 36) {incomingByte = 37;}
-  }
+void Animation3() {
+
+}
+
+void stepFrame() {
+
+}
+
+void Off() {
 
 }
